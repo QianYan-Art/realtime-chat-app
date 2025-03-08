@@ -1,0 +1,32 @@
+package com.chatapp.config;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+/**
+ * Web配置类
+ * 处理CORS和其他Web相关配置
+ */
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+
+    @Value("${app.cors.allowed-origins:*}")
+    private String allowedOrigins;
+
+    /**
+     * 配置CORS
+     * 允许前端跨域访问后端API
+     * @param registry CORS注册表
+     */
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOrigins(allowedOrigins.split(","))
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true)
+                .maxAge(3600);
+    }
+} 

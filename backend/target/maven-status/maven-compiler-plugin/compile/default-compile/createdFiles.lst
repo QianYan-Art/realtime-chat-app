@@ -1,0 +1,9 @@
+com\chatapp\config\WebConfig.class
+com\chatapp\model\WebRTCSignal.class
+com\chatapp\config\WebSocketConfig.class
+com\chatapp\config\WebRTCConfig.class
+com\chatapp\config\WebRTCConfig$IceServer.class
+com\chatapp\controller\LogController.class
+com\chatapp\config\WebRTCConfig$VideoConfig.class
+com\chatapp\RealtimeChatApplication.class
+com\chatapp\controller\WebRTCSignalingController.class

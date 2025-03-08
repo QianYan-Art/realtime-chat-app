@@ -1,0 +1,54 @@
+name: realtime-chat-app
+description: 基于WebSocket和WebRTC的实时聊天和视频通话应用
+
+# 容器配置
+container:
+  image: ${REGISTRY}/realtime-chat-app:latest
+  ports:
+    - 80:80
+  env:
+    - name: SPRING_PROFILES_ACTIVE
+      value: prod
+    - name: NODE_ENV
+      value: production
+    - name: ADMIN_USERNAME
+      value: admin
+    - name: ADMIN_PASSWORD
+      value: ${ADMIN_PASSWORD}
+    - name: JWT_SECRET
+      value: ${JWT_SECRET}
+    - name: ALLOWED_ORIGINS
+      value: ${APP_DOMAIN}
+  resources:
+    cpu: 1
+    memory: 2Gi
+  volumes:
+    - name: data
+      mountPath: /app/data
+      size: 1Gi
+    - name: logs
+      mountPath: /app/logs
+      size: 1Gi
+
+# 构建配置
+build:
+  dockerfile: Dockerfile
+  context: .
+  args:
+    - name: REGISTRY
+      value: ${REGISTRY}
+
+# 网络配置
+networking:
+  type: ClusterIP
+  domain: ${APP_DOMAIN}
+  tls: true
+
+# 持久化配置
+persistence:
+  - name: data
+    size: 1Gi
+    mountPath: /app/data
+  - name: logs
+    size: 1Gi
+    mountPath: /app/logs 

@@ -1,0 +1,48 @@
+server:
+  port: 8080
+
+spring:
+  # 数据库配置
+  datasource:
+    url: jdbc:h2:mem:chatdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: 
+  
+  # JPA配置
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  
+  # H2控制台配置
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+# JWT配置
+jwt:
+  secret: your-secret-key
+  expiration: 86400000 # 24小时
+
+# WebRTC配置
+webrtc:
+  ice-servers:
+    - urls: stun:stun.l.google.com:19302
+    - urls: stun:stun1.l.google.com:19302
+  video:
+    codec: VP8
+    width: 640
+    height: 480
+    framerate: 15
+    bitrate: 500000 # 初始码率500kbps
+    min-bitrate: 100000 # 最小码率100kbps
+    max-bitrate: 1000000 # 最大码率1Mbps
+
+# WebSocket配置
+websocket:
+  endpoint: /ws
+  allowed-origins: http://localhost:5173
+  message-size-limit: 65536 # 64KB

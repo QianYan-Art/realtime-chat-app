@@ -1,0 +1,36 @@
+{
+  "packages": [
+    "nodejs@18",
+    "jdk@17",
+    "maven@3.9",
+    "nginx@latest"
+  ],
+  "shell": {
+    "init_hook": [
+      "echo '初始化开发环境...'",
+      "chmod +x ./devbox-start.sh"
+    ],
+    "scripts": {
+      "build-frontend": "cd frontend && npm install && npm run build",
+      "build-backend": "cd backend && mvn clean package -DskipTests",
+      "build-all": "devbox run build-frontend && devbox run build-backend",
+      "start-frontend": "cd frontend && npm start",
+      "start-backend": "cd backend && java -jar target/realtime-chat-0.0.1-SNAPSHOT.jar",
+      "start-all": "./devbox-start.sh"
+    }
+  },
+  "services": {
+    "backend": {
+      "command": "cd backend && java -jar target/realtime-chat-0.0.1-SNAPSHOT.jar",
+      "environment": {
+        "DEVBOX_SPRING_PROFILES_ACTIVE": "prod"
+      }
+    },
+    "frontend": {
+      "command": "cd frontend && npm start",
+      "environment": {
+        "DEVBOX_PORT": "8080"
+      }
+    }
+  }
+}

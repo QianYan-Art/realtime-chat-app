@@ -1,0 +1,505 @@
+/**
+ * 实时聊天应用样式
+ */
+
+/* 变量定义 */
+:root {
+    --primary-color: #4a6ee0;
+    --primary-dark: #3a5bc7;
+    --primary-light: #6b89e8;
+    --secondary-color: #6c757d;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --dark-color: #343a40;
+    --light-color: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-color: #212529;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* 全局样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f5f7fb;
+    color: var(--text-color);
+    line-height: 1.6;
+}
+
+.page {
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+/* 登录页面样式 */
+.login-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+}
+
+.login-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-header h2 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.login-form .form-group {
+    margin-bottom: 20px;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.login-form .form-control {
+    width: 100%;
+    padding: 10px 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.login-form .btn-block {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+/* 聊天页面样式 */
+.chat-container {
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    height: 90vh;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+/* 侧边栏样式 */
+.sidebar {
+    width: 300px;
+    background-color: #f0f2f5;
+    border-right: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+.user-profile {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    margin-right: 15px;
+}
+
+.user-info h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.status {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+}
+
+.status.online::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    margin-right: 5px;
+}
+
+.user-actions {
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.users-section {
+    padding: 15px;
+    flex-grow: 1;
+    overflow-y: auto;
+}
+
+.users-section h4 {
+    margin-bottom: 15px;
+    font-size: 16px;
+    color: var(--secondary-color);
+}
+
+.user-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.user-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    border-radius: 5px;
+    background-color: white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.call-btn {
+    padding: 5px 10px;
+}
+
+/* 聊天区域样式 */
+.chat-area {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.chat-header {
+    padding: 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.chat-header h3 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.chat-messages {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.message {
+    max-width: 70%;
+    padding: 10px 15px;
+    border-radius: 10px;
+    position: relative;
+}
+
+.message-self {
+    align-self: flex-end;
+    background-color: var(--primary-light);
+    color: white;
+    border-bottom-right-radius: 0;
+}
+
+.message-other {
+    align-self: flex-start;
+    background-color: #e9ecef;
+    border-bottom-left-radius: 0;
+}
+
+.message-system {
+    align-self: center;
+    background-color: #f8f9fa;
+    color: var(--secondary-color);
+    font-style: italic;
+    max-width: 90%;
+    text-align: center;
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 5px;
+    font-size: 12px;
+}
+
+.message-sender {
+    font-weight: 600;
+}
+
+.message-time {
+    opacity: 0.8;
+}
+
+.message-content {
+    word-break: break-word;
+}
+
+.chat-input {
+    display: flex;
+    padding: 15px;
+    border-top: 1px solid var(--border-color);
+}
+
+.chat-input .form-control {
+    flex-grow: 1;
+    margin-right: 10px;
+    border-radius: 20px;
+    padding: 10px 15px;
+}
+
+/* 视频通话页面样式 */
+.video-container {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    width: 400px;
+    height: 300px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: fixed;
+    top: 50px;
+    right: 50px;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+/* 可调整大小的容器 */
+.resizable {
+    resize: both;
+    overflow: auto;
+    min-width: 320px;
+    min-height: 400px;
+}
+
+.video-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+    background-color: var(--primary-color);
+    color: white;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.video-controls-header {
+    display: flex;
+    gap: 10px;
+}
+
+.video-area {
+    flex: 1;
+    display: flex;
+    position: relative;
+    background-color: #000;
+    overflow: hidden;
+}
+
+.video-main {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+
+.video-self {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    width: 150px;
+    height: 100px;
+    border: 2px solid white;
+    border-radius: 5px;
+    overflow: hidden;
+    z-index: 10;
+}
+
+.video-main video, .video-self video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.video-controls-footer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    padding: 15px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.btn-control {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border: none;
+    font-size: 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.btn-control:hover:not(:disabled) {
+    background-color: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+.btn-control.btn-danger {
+    background-color: var(--danger-color);
+}
+
+.btn-control.btn-danger:hover:not(:disabled) {
+    background-color: #c82333;
+}
+
+/* 最小化视频栏样式 */
+.minimized-video-bar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    background-color: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.minimized-video-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 15px;
+}
+
+.minimized-video-title {
+    color: white;
+    font-weight: bold;
+}
+
+.minimized-video-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .chat-container {
+        flex-direction: column;
+        height: auto;
+    }
+    
+    .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--border-color);
+    }
+    
+    .chat-area {
+        height: 60vh;
+    }
+    
+    .video-self {
+        width: 120px;
+        height: 90px;
+        bottom: 10px;
+        right: 10px;
+    }
+    
+    .btn-control {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+    }
+}
+
+/* 用户管理样式 */
+.login-container .mt-3 {
+    text-align: center;
+    margin-top: 1.5rem !important;
+}
+
+#manageUsersButton {
+    font-size: 0.85rem;
+    padding: 0.375rem 0.75rem;
+}
+
+#loginError {
+    font-size: 0.9rem;
+    padding: 0.5rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.modal-body .card {
+    border: 1px solid rgba(0, 0, 0, 0.125);
+    border-radius: 0.25rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.modal-body .card-header {
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 0.75rem 1.25rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+.modal-body .card-header h6 {
+    margin-bottom: 0;
+    font-weight: 600;
+}
+
+.modal-body .card-body {
+    padding: 1.25rem;
+}
+
+.modal-body .form-label {
+    font-size: 0.9rem;
+    margin-bottom: 0.25rem;
+}
+
+/* 响应式调整 */
+@media (max-width: 576px) {
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+    
+    .modal-body .card {
+        margin-bottom: 1rem;
+    }
+} 
