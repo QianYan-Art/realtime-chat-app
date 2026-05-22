@@ -30,12 +30,6 @@ app.use('/api', createProxyMiddleware({
   changeOrigin: true
 }));
 
-// WebSocket 代理到后端
-app.use('/ws', createProxyMiddleware({
-  target: 'http://localhost:8083',
-  changeOrigin: true,
-  ws: true
-}));
 
 // 确定静态文件目录
 const staticDir = process.env.NODE_ENV === 'production' 
