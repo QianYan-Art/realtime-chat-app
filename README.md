@@ -196,11 +196,13 @@ sealos apply -f sealos-devbox.yaml
 | 方向 | 路径 | 说明 |
 |------|------|------|
 | 客户端发送 | `/app/chat` | 发送聊天消息 |
+| 客户端发送 | `/app/join` | 加入聊天室（广播系统消息） |
 | 客户端发送 | `/app/webrtc/call` | 发起视频通话 |
 | 客户端发送 | `/app/webrtc/answer` | 应答通话 |
 | 客户端发送 | `/app/webrtc/ice-candidate` | 交换 ICE 候选 |
 | 客户端发送 | `/app/webrtc/hangup` | 挂断通话 |
-| 服务端推送 | `/topic/public` | 公共聊天消息 |
+| 服务端推送 | `/topic/public` | 公共聊天消息（广播） |
+| 服务端推送 | `/queue/messages` | 私聊消息（点对点） |
 | 服务端推送 | `/queue/webrtc/signal` | WebRTC 信令 |
 
 ## 浏览器兼容性
