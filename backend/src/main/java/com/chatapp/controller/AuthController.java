@@ -101,7 +101,7 @@ public class AuthController {
     }
 
     private boolean isUsernameTaken(String username) {
-        return "admin".equals(username) || "user".equals(username);
+        return false;
     }
 
     private String generateToken(String username) {

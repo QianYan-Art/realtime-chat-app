@@ -21,7 +21,7 @@ function connectWebSocket() {
         wsHandler = new WebSocketHandler();
         window.wsHandler = wsHandler;
 
-        // 注册消息处理器
+        // 注册聊天消息处理器
         wsHandler.addMessageHandler('CHAT', function(message) {
             appendMessage({
                 sender: message.sender || '未知用户',
@@ -49,6 +49,7 @@ function connectWebSocket() {
         // WebRTC 信令消息
         wsHandler.addMessageHandler('call', function(signal) {
             console.log('收到通话请求 from:', signal.from);
+            window.__remoteUser = signal.from;
             if (webrtcHandler && signal.data) {
                 webrtcHandler.createPeerConnection().then(function() {
                     return webrtcHandler.peerConnection.setRemoteDescription(new RTCSessionDescription(signal.data));
@@ -63,6 +64,7 @@ function connectWebSocket() {
 
         wsHandler.addMessageHandler('answer', function(signal) {
             console.log('收到应答 from:', signal.from);
+            window.__remoteUser = signal.from;
             if (webrtcHandler && webrtcHandler.peerConnection && signal.data) {
                 webrtcHandler.peerConnection.setRemoteDescription(new RTCSessionDescription(signal.data))
                     .catch(function(e) { console.error('设置远程描述失败:', e); });
@@ -71,6 +73,7 @@ function connectWebSocket() {
 
         wsHandler.addMessageHandler('ice-candidate', function(signal) {
             console.log('收到ICE候选 from:', signal.from);
+            window.__remoteUser = signal.from;
             if (webrtcHandler && webrtcHandler.peerConnection && signal.data) {
                 webrtcHandler.peerConnection.addIceCandidate(new RTCIceCandidate(signal.data))
                     .catch(function(e) { console.error('添加ICE候选失败:', e); });
@@ -81,6 +84,7 @@ function connectWebSocket() {
             console.log('对方挂断:', signal.from);
             if (webrtcHandler) {
                 webrtcHandler.cleanup();
+                window.__remoteUser = null;
                 localVideoStarted = false;
                 document.getElementById('startVideoButton').disabled = false;
                 document.getElementById('toggleAudioButton').disabled = true;
@@ -91,7 +95,6 @@ function connectWebSocket() {
             }
         });
 
-        // 连接WebSocket服务器
         wsHandler.connect()
             .then(function() {
                 console.log('WebSocket连接成功');
@@ -111,13 +114,12 @@ function subscribeToMessages() {
         wsHandler.subscribe('/topic/public');
         wsHandler.subscribe('/user/queue/webrtc/signal');
         wsHandler.subscribe('/user/queue/messages');
-        // 发送 join 消息
         wsHandler._sendFrame('/app/join', {});
         console.log('已订阅消息主题');
     }
 }
 
-// HTML转义 - 防止XSS攻击
+// HTML转义
 function escapeHtml(text) {
     if (!text) return '';
     return String(text)
@@ -202,12 +204,13 @@ async function handleLogin() {
 function handleLogout() {
     if (wsHandler) { wsHandler.disconnect(); }
     currentUser = null;
+    window.__remoteUser = null;
     if (apiHandler) { apiHandler.clearToken(); }
     showPage('loginPage');
     console.log('已登出');
 }
 
-// 初始化用户凭据管理模态框
+// 初始化用户管理模态框
 function initUserManagement() {
     userManagementModal = new bootstrap.Modal(document.getElementById('userManagementModal'));
 
@@ -268,6 +271,21 @@ async function startLocalVideo() {
     }
 }
 
+// 发起视频通话（通过输入目标用户名）
+function startVideoCall(targetUsername) {
+    if (!targetUsername || !wsHandler || !wsHandler.connected) {
+        alert('请先登录并输入目标用户名');
+        return;
+    }
+    window.__remoteUser = targetUsername;
+    if (!webrtcHandler) {
+        webrtcHandler = new WebRTCHandler();
+    }
+    webrtcHandler.createPeerConnection().then(function() {
+        return webrtcHandler.createAndSendOffer(targetUsername);
+    }).catch(function(e) { console.error('发起通话失败:', e); });
+}
+
 // 初始化视频通话控制
 function initializeVideoControls() {
     const audioToggle = document.getElementById('toggleAudioButton');
@@ -316,11 +334,11 @@ function initializeVideoControls() {
 
     function endCall() {
         if (webrtcHandler) {
-            // 通知对方挂断
-            if (wsHandler && wsHandler.connected) {
-                wsHandler.send({ type: 'hangup', targetUserId: window.__remoteUser || '' });
+            if (wsHandler && wsHandler.connected && window.__remoteUser) {
+                wsHandler.sendHangup(window.__remoteUser);
             }
             webrtcHandler.cleanup();
+            window.__remoteUser = null;
             localVideoStarted = false;
             document.getElementById('startVideoButton').disabled = false;
             document.getElementById('toggleAudioButton').disabled = true;
@@ -372,13 +390,7 @@ async function sendMessage() {
 
     try {
         if (wsHandler && wsHandler.connected) {
-            // 通过 STOMP 发送到 /app/chat
-            wsHandler.send({
-                type: 'CHAT',
-                content: content,
-                sender: currentUser.username,
-                timestamp: new Date().toISOString()
-            });
+            wsHandler.sendChatMessage(content);
         } else {
             appendMessage({ sender: currentUser.username, content: content, timestamp: new Date().toISOString() });
         }
