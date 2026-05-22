@@ -144,50 +144,34 @@ async function handleLogin() {
     }
     
     try {
-        // 通过后端API验证用户
         if (!apiHandler) {
             apiHandler = new ApiHandler();
         }
         const response = await apiHandler.login(username, password);
         
         if (!response || !response.token) {
-            showLoginError('用户名或密码错误，或者您不是允许的用户');
+            showLoginError('用户名或密码错误');
             return;
         }
         
-        // 查找用户显示名称
-        let displayName = username;
-        for (const key in ALLOWED_USERS) {
-            if (ALLOWED_USERS[key].username === username) {
-                displayName = ALLOWED_USERS[key].displayName;
-                break;
-            }
-        }
-        
-        const user = {
-            username: username,
-            displayName: displayName,
+        currentUser = {
+            username: response.username || username,
+            displayName: response.username || username,
             roles: ['USER']
         };
         
-        // 设置当前用户
-        currentUser = user;
+        document.getElementById('currentUserName').textContent = currentUser.username;
         
-        // 更新用户显示名称
-        document.getElementById('currentUserName').textContent = user.displayName || user.username;
-        
-        // 显示聊天页面
         showPage('chatPage');
-        
-        // 连接WebSocket
         connectWebSocket();
-        
-        // 订阅消息
         subscribeToMessages();
         
-        console.log('登录成功:', user.username);
+        console.log('登录成功:', currentUser.username);
     } catch (error) {
         console.error('登录处理错误:', error);
+        if (apiHandler) {
+            apiHandler.clearToken();
+        }
         showLoginError('登录过程中发生错误，请重试');
     }
 }
@@ -201,6 +185,9 @@ function handleLogout() {
     
     // 清除当前用户信息
     currentUser = null;
+    if (apiHandler) {
+        apiHandler.clearToken();
+    }
     
     // 返回登录页面
     showPage('loginPage');

@@ -64,7 +64,7 @@ public class WebRTCSignalingController {
      */
     @MessageMapping("/webrtc/call")
     public void call(@Payload Map<String, String> payload, SimpMessageHeaderAccessor accessor) {
-        String from = accessor.getSessionId();
+        String from = accessor.getUser() != null ? accessor.getUser().getName() : accessor.getSessionId();
         String to = payload.get("to");
         
         log.info("用户 {} 呼叫用户 {}", from, to);
@@ -72,7 +72,7 @@ public class WebRTCSignalingController {
         WebRTCSignal signal = new WebRTCSignal();
         signal.setType("call");
         signal.setFrom(from);
-        signal.setData(webRTCConfig.getVideo());
+        signal.setData(webRTCConfig.getVideo() != null ? webRTCConfig.getVideo() : new com.chatapp.config.WebRTCConfig.VideoConfig());
         
         messagingTemplate.convertAndSendToUser(
             to,

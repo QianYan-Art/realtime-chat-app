@@ -21,6 +21,7 @@ backend/logs/
 # 数据库文件
 # ============================================
 backend/data/
+data/
 *.db
 *.mv.db
 *.trace.db
