@@ -7,6 +7,7 @@ const path = require('path');
 const compression = require('compression');
 const helmet = require('helmet');
 const cors = require('cors');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 // 创建Express应用
 const app = express();
@@ -22,6 +23,19 @@ app.use(compression());
 
 // 启用CORS
 app.use(cors());
+
+// API 代理到后端
+app.use('/api', createProxyMiddleware({
+  target: 'http://localhost:8083',
+  changeOrigin: true
+}));
+
+// WebSocket 代理到后端
+app.use('/ws', createProxyMiddleware({
+  target: 'http://localhost:8083',
+  changeOrigin: true,
+  ws: true
+}));
 
 // 确定静态文件目录
 const staticDir = process.env.NODE_ENV === 'production' 

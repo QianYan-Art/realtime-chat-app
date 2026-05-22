@@ -1,8 +1,11 @@
 let currentUser = null;
 let stompClient = null;
+let wsHandler = null;
+
 let webrtcHandler = null;
 let localVideoStarted = false;
 let userManagementModal = null;
+let apiHandler = null;
 
 // 页面管理
 function showPage(pageId) {
@@ -12,44 +15,73 @@ function showPage(pageId) {
     document.getElementById(pageId).style.display = 'block';
 }
 
-// 显示聊天区域
-function showChatSection() {
-    document.getElementById('chatSection').classList.remove('hidden');
-    document.getElementById('videoSection').classList.add('hidden');
-    
-    // 更新菜单项状态
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector('.menu-item:nth-child(1)').classList.add('active');
-}
 
-// 显示视频区域
-function showVideoSection() {
-    document.getElementById('chatSection').classList.add('hidden');
-    document.getElementById('videoSection').classList.remove('hidden');
-    
-    // 更新菜单项状态
-    document.querySelectorAll('.menu-item').forEach(item => {
-        item.classList.remove('active');
-    });
-    document.querySelector('.menu-item:nth-child(2)').classList.add('active');
-}
-
-// WebSocket连接 - 简化版，不使用SockJS
+// WebSocket连接
 function connectWebSocket() {
     try {
-        console.log('尝试连接WebSocket...');
-        // 直接使用模拟数据，不实际连接WebSocket
-        console.log('WebSocket连接成功（模拟）');
+        wsHandler = new WebSocketHandler();
+        
+        // 注册消息处理器
+        wsHandler.addMessageHandler('CHAT', function(message) {
+            appendMessage({
+                sender: message.sender || message.username || '未知用户',
+                content: message.content,
+                timestamp: message.timestamp || new Date().toISOString()
+            });
+        });
+        
+        wsHandler.addMessageHandler('JOIN', function(message) {
+            appendMessage({
+                sender: '系统',
+                content: (message.username || '用户') + ' 加入了聊天室',
+                timestamp: message.timestamp || new Date().toISOString()
+            });
+        });
+        
+        wsHandler.addMessageHandler('LEAVE', function(message) {
+            appendMessage({
+                sender: '系统',
+                content: (message.username || '用户') + ' 离开了聊天室',
+                timestamp: message.timestamp || new Date().toISOString()
+            });
+        });
+        
+        // 连接WebSocket服务器
+        wsHandler.connect()
+            .then(function() {
+                console.log('WebSocket连接成功');
+                subscribeToMessages();
+            })
+            .catch(function(error) {
+                console.error('WebSocket连接失败:', error);
+            });
     } catch (error) {
         console.error('WebSocket连接失败:', error);
     }
 }
 
-// 订阅消息主题 - 模拟版
+
+// 订阅消息主题
 function subscribeToMessages() {
-    console.log('已订阅消息主题（模拟）');
+    if (wsHandler && wsHandler.connected) {
+        wsHandler.send({
+            type: 'SUBSCRIBE',
+            destination: '/topic/public'
+        });
+        console.log('已订阅消息主题: /topic/public');
+    }
+}
+
+
+// HTML转义 - 防止XSS攻击
+function escapeHtml(text) {
+    if (!text) return '';
+    return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
 }
 
 // 添加消息到聊天窗口
@@ -69,13 +101,13 @@ function appendMessage(message) {
         messageElement.classList.add('message-other');
     }
     
-    // 创建消息内容
+    // 创建消息内容（使用转义后的值防止XSS）
     messageElement.innerHTML = `
         <div class="message-header">
-            <span class="message-sender">${message.sender}</span>
+            <span class="message-sender">${escapeHtml(message.sender)}</span>
             <span class="message-time">${timeString}</span>
         </div>
-        <div class="message-content">${message.content}</div>
+        <div class="message-content">${escapeHtml(message.content)}</div>
     `;
     
     messageList.appendChild(messageElement);
@@ -83,6 +115,7 @@ function appendMessage(message) {
     // 滚动到最新消息
     messageList.scrollTop = messageList.scrollHeight;
 }
+
 
 /**
  * 显示登录错误信息
@@ -99,26 +132,6 @@ function showLoginError(message) {
     }, 3000);
 }
 
-/**
- * 验证用户登录
- * @param {string} username - 用户名
- * @param {string} password - 密码
- * @returns {Object|null} 用户对象或null（如果验证失败）
- */
-function validateUser(username, password) {
-    // 检查是否是允许的用户
-    for (const key in ALLOWED_USERS) {
-        const user = ALLOWED_USERS[key];
-        if (user.username === username && user.password === password) {
-            return {
-                username: user.username,
-                displayName: user.displayName,
-                roles: ['USER']
-            };
-        }
-    }
-    return null;
-}
 
 // 登录处理
 async function handleLogin() {
@@ -131,13 +144,31 @@ async function handleLogin() {
     }
     
     try {
-        // 验证用户
-        const user = validateUser(username, password);
+        // 通过后端API验证用户
+        if (!apiHandler) {
+            apiHandler = new ApiHandler();
+        }
+        const response = await apiHandler.login(username, password);
         
-        if (!user) {
+        if (!response || !response.token) {
             showLoginError('用户名或密码错误，或者您不是允许的用户');
             return;
         }
+        
+        // 查找用户显示名称
+        let displayName = username;
+        for (const key in ALLOWED_USERS) {
+            if (ALLOWED_USERS[key].username === username) {
+                displayName = ALLOWED_USERS[key].displayName;
+                break;
+            }
+        }
+        
+        const user = {
+            username: username,
+            displayName: displayName,
+            roles: ['USER']
+        };
         
         // 设置当前用户
         currentUser = user;
@@ -164,8 +195,8 @@ async function handleLogin() {
 // 登出处理
 function handleLogout() {
     // 断开WebSocket连接
-    if (stompClient && stompClient.connected) {
-        stompClient.disconnect();
+    if (wsHandler) {
+        wsHandler.disconnect();
     }
     
     // 清除当前用户信息
@@ -177,6 +208,7 @@ function handleLogout() {
     console.log('已登出');
 }
 
+
 // 初始化用户凭据管理模态框
 function initUserManagement() {
     // 初始化Bootstrap模态框
@@ -185,45 +217,41 @@ function initUserManagement() {
     // 打开模态框时填充当前用户数据
     document.getElementById('userManagementModal').addEventListener('show.bs.modal', function () {
         document.getElementById('user1Username').value = ALLOWED_USERS.user1.username;
-        document.getElementById('user1Password').value = ALLOWED_USERS.user1.password;
+        document.getElementById('user1DisplayName').value = ALLOWED_USERS.user1.displayName;
         document.getElementById('user2Username').value = ALLOWED_USERS.user2.username;
-        document.getElementById('user2Password').value = ALLOWED_USERS.user2.password;
+        document.getElementById('user2DisplayName').value = ALLOWED_USERS.user2.displayName;
     });
     
     // 保存用户1设置
     document.getElementById('saveUser1Button').addEventListener('click', function() {
         const username = document.getElementById('user1Username').value;
-        const password = document.getElementById('user1Password').value;
+        const displayName = document.getElementById('user1DisplayName').value;
         
-        if (!username || !password) {
-            alert('用户名和密码不能为空');
+        if (!username || !displayName) {
+            alert('用户名和显示名称不能为空');
             return;
         }
         
-        updateUserCredentials('user1', {
-            username: username,
-            password: password
-        });
+        ALLOWED_USERS.user1.username = username;
+        ALLOWED_USERS.user1.displayName = displayName;
         
-        alert('用户1凭据已更新');
+        alert('用户1显示名称已更新');
     });
     
     // 保存用户2设置
     document.getElementById('saveUser2Button').addEventListener('click', function() {
         const username = document.getElementById('user2Username').value;
-        const password = document.getElementById('user2Password').value;
+        const displayName = document.getElementById('user2DisplayName').value;
         
-        if (!username || !password) {
-            alert('用户名和密码不能为空');
+        if (!username || !displayName) {
+            alert('用户名和显示名称不能为空');
             return;
         }
         
-        updateUserCredentials('user2', {
-            username: username,
-            password: password
-        });
+        ALLOWED_USERS.user2.username = username;
+        ALLOWED_USERS.user2.displayName = displayName;
         
-        alert('用户2凭据已更新');
+        alert('用户2显示名称已更新');
     });
     
     // 打开用户管理模态框
@@ -410,15 +438,17 @@ async function sendMessage() {
     }
     
     try {
-        // 创建消息对象
-        const message = {
-            sender: currentUser.username,
-            content: content,
-            timestamp: new Date().toISOString()
-        };
-        
-        // 直接在本地显示消息（模拟发送）
-        appendMessage(message);
+        // 通过WebSocket发送消息
+        if (wsHandler && wsHandler.connected) {
+            wsHandler.sendChatMessage(content);
+        } else {
+            // 如果WebSocket未连接，本地显示消息
+            appendMessage({
+                sender: currentUser.username,
+                content: content,
+                timestamp: new Date().toISOString()
+            });
+        }
         
         // 清空输入框
         messageInput.value = '';

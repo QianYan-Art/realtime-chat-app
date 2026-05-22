@@ -2,6 +2,7 @@ package com.chatapp.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.messaging.simp.config.ChannelRegistration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;
 import org.springframework.web.socket.config.annotation.EnableWebSocketMessageBroker;
 import org.springframework.web.socket.config.annotation.StompEndpointRegistry;
@@ -15,16 +16,22 @@ import org.springframework.web.socket.config.annotation.WebSocketMessageBrokerCo
 @EnableWebSocketMessageBroker
 public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
+    private final WebSocketAuthInterceptor webSocketAuthInterceptor;
+
+    public WebSocketConfig(WebSocketAuthInterceptor webSocketAuthInterceptor) {
+        this.webSocketAuthInterceptor = webSocketAuthInterceptor;
+    }
+
     /**
      * WebSocket端点路径，从配置文件中读取
      */
-    @Value("${websocket.endpoint}")
+    @Value("${spring.websocket.path:/ws}")
     private String websocketEndpoint;
 
     /**
      * 允许的跨域来源，从配置文件中读取
      */
-    @Value("${websocket.allowed-origins}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 
     /**
@@ -35,7 +42,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint(websocketEndpoint)
-                .setAllowedOrigins(allowedOrigins) // 设置允许的跨域来源
+                .setAllowedOrigins(allowedOrigins.split(","))
                 .withSockJS(); // 启用SockJS支持，用于不支持WebSocket的浏览器
     }
 
@@ -49,5 +56,15 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
         registry.setApplicationDestinationPrefixes("/app"); // 设置客户端发送消息的前缀
         registry.enableSimpleBroker("/topic", "/queue"); // 启用简单消息代理，支持点对点和广播消息
         registry.setUserDestinationPrefix("/user"); // 设置用户目标前缀，用于点对点消息
+    }
+
+    /**
+     * 配置客户端入站通道
+     * 注册WebSocket认证拦截器
+     * @param registration 通道注册器
+     */
+    @Override
+    public void configureClientInboundChannel(ChannelRegistration registration) {
+        registration.interceptors(webSocketAuthInterceptor);
     }
 }
